@@ -10,6 +10,7 @@ Pipeline:
 
 from __future__ import annotations
 
+import math
 import re
 import time
 from pathlib import Path
@@ -217,7 +218,7 @@ def _embed_batch_with_retry(
                 time.sleep(wait)
                 continue
             raise
-    raise RuntimeError("unreachable")  # satisfies type checker
+    assert False, "unreachable"
 
 
 def _embed_batch(pc: Pinecone, texts: list[str]) -> list[list[float]]:
@@ -238,8 +239,7 @@ def _upsert_chunks(
     year: int,
 ) -> None:
     index = pc.Index(index_name)
-    total_batches = -(-len(chunks) // EMBED_BATCH_SIZE)  # ceiling division
-
+    total_batches = math.ceil(len(chunks) / EMBED_BATCH_SIZE)
     for batch_num, batch_start in enumerate(range(0, len(chunks), EMBED_BATCH_SIZE), start=1):
         batch = chunks[batch_start : batch_start + EMBED_BATCH_SIZE]
         print(f"  Batch {batch_num}/{total_batches} ({len(batch)} chunks)...")
