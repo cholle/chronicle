@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.git/
+.gitignore
+.env
+.env.*
+*.md
+tests/
+data/raw/
+scripts/ingest_corpus.py
