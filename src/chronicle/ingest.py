@@ -39,13 +39,13 @@ OVERLAP_TOKENS = 50
 HARD_CEILING = 450
 EMBED_BATCH_SIZE = 96
 
-DATA_RAW = Path(__file__).parents[3] / "data" / "raw"
+DATA_RAW = (Path(__file__).parents[2] / "data" / "raw").resolve()
 
 if not DATA_RAW.is_dir():
     raise ValueError(
         f"DATA_RAW does not exist: {DATA_RAW}\n"
-        f"  __file__ resolves to: {Path(__file__).resolve()}\n"
-        "  Adjust the parents[] index in ingest.py to point at the project root."
+        f"  ingest.py resolves to: {Path(__file__).resolve()}\n"
+        f"  Adjust parents[] index in ingest.py to point at the project root."
     )
 
 # ---------------------------------------------------------------------------
