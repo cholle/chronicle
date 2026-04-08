@@ -41,6 +41,13 @@ EMBED_BATCH_SIZE = 96
 
 DATA_RAW = Path(__file__).parents[3] / "data" / "raw"
 
+if not DATA_RAW.is_dir():
+    raise ValueError(
+        f"DATA_RAW does not exist: {DATA_RAW}\n"
+        f"  __file__ resolves to: {Path(__file__).resolve()}\n"
+        "  Adjust the parents[] index in ingest.py to point at the project root."
+    )
+
 # ---------------------------------------------------------------------------
 # Text extraction
 # ---------------------------------------------------------------------------
@@ -231,7 +238,7 @@ def _upsert_chunks(
             }
             for i in range(len(batch))
         ]
-        index.upsert(vectors=vectors)
+        index.upsert(vectors=vectors)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -264,6 +271,6 @@ def ingest_corpus() -> None:
 
         print(f"  {len(chunks)} chunks")
         _upsert_chunks(pc, settings.pinecone_index, chunks, pdf_path.stem, meta, year)
-        print(f"  Done.")
+        print("  Done.")
 
     print("Ingestion complete.")
