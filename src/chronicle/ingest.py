@@ -11,10 +11,12 @@ Pipeline:
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 
 import tiktoken
 from pinecone import Pinecone
+from pinecone.exceptions import PineconeApiException
 from pypdf import PdfReader
 
 from chronicle.config import settings
@@ -201,6 +203,21 @@ def chunk_text(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+def _embed_batch_with_retry(pc: Pinecone, texts: list[str], max_retries: int = 3) -> list[list[float]]:
+    """Call _embed_batch with exponential back-off on 429 rate-limit responses."""
+    for attempt in range(max_retries):
+        try:
+            return _embed_batch(pc, texts)
+        except PineconeApiException as e:
+            if e.status == 429 and attempt < max_retries - 1:
+                wait = 60
+                print(f"  Rate limited, sleeping {wait}s (attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait)
+                continue
+            raise
+    raise RuntimeError("unreachable")  # satisfies type checker
+
+
 def _embed_batch(pc: Pinecone, texts: list[str]) -> list[list[float]]:
     response = pc.inference.embed(
         model=settings.embedding_model,
@@ -222,7 +239,9 @@ def _upsert_chunks(
 
     for batch_start in range(0, len(chunks), EMBED_BATCH_SIZE):
         batch = chunks[batch_start : batch_start + EMBED_BATCH_SIZE]
-        embeddings = _embed_batch(pc, batch)
+        embeddings = _embed_batch_with_retry(pc, batch)
+        if batch_start + EMBED_BATCH_SIZE < len(chunks):
+            time.sleep(10)  # stay under 250k tokens/min on Pinecone starter
 
         vectors = [
             {
