@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-uv run pytest tests/ -v                     # full test suite (14 tests)
+uv run pytest tests/ -v                     # full test suite
 uv run pytest tests/test_generate.py -v    # single test file
 uv run pytest tests/ -k "test_chunk"       # single test by name pattern
 uv run python scripts/ingest_corpus.py     # one-shot Pinecone ingestion (~5 min)
@@ -31,7 +31,7 @@ ingest.py → (Pinecone) → retrieve.py → generate.py → api.py (stub)
 
 **`generate.py`** — Calls `retrieve.search()`, short-circuits with a canned message if zero results (no Claude call), builds prompt via `_build_prompt()`, calls `client.messages.create()`. Returns `{answer: str, citations: list[dict], chunks_used: int}`. The citations field is the raw chunk list passed to Claude — caller-verifiable provenance.
 
-**`api.py`** — Stub only. Next to implement: one POST `/query` endpoint wrapping `generate.answer()` with optional `period` and `year_range` params.
+** `api.py` ** — FastAPI app with three endpoints: GET / (metadata), GET /health (Railway healthcheck), POST /query (wraps generate.answer()). Pydantic QueryRequest validates period as a Literal, enforces top_k range, and rejects empty queries at the 422 boundary. Lazy singletons in retrieve.py and generate.py cache the Pinecone/Anthropic clients across requests.
 
 ## Corpus metadata
 
@@ -46,3 +46,10 @@ Index name `chronicle`, 1024 dimensions, cosine similarity, serverless. Must use
 - The lazy singleton pattern (`_get_index()`, `_get_client()`) is single-threaded safe for scripts and demos. It will need refactoring for async FastAPI (thread-local or dependency injection).
 - `sentence-transformers` is **not** in the dependencies — embedding is delegated entirely to Pinecone's inference API. Do not add local embedding.
 - `_build_prompt` raises `ValueError` on empty chunks by design (invariant enforcement). The `answer()` function handles the empty case before calling it.
+
+## Guardrails — what NOT to do
+
+- Do not add LangChain, LangGraph, or sentence-transformers. This project deliberately uses direct SDK calls (Pinecone, Anthropic) to keep the stack minimal and the code path inspectable.
+- Do not introduce `Index` as a type import from `pinecone` — the top-level symbol doesn't exist in v5+. Use `Any` or omit the annotation.
+- Do not couple retrieve.py or generate.py to FastAPI. api.py is a thin layer; the lower modules must remain usable from CLI scripts.
+- Do not add DocStore / BaseRetriever / ChunkingStrategy abstractions preemptively. Write concrete versions first; extract interfaces only when a second concrete implementation exists.
