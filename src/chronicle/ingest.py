@@ -203,7 +203,9 @@ def chunk_text(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def _embed_batch_with_retry(pc: Pinecone, texts: list[str], max_retries: int = 3) -> list[list[float]]:
+def _embed_batch_with_retry(
+    pc: Pinecone, texts: list[str], max_retries: int = 3
+) -> list[list[float]]:
     """Call _embed_batch with exponential back-off on 429 rate-limit responses."""
     for attempt in range(max_retries):
         try:
@@ -272,16 +274,16 @@ def ingest_corpus() -> None:
 
     pdf_files = sorted(DATA_RAW.glob("*.pdf"))
     if not pdf_files:
-        print(f"No PDF files found in {DATA_RAW}")
-        return
+        raise ValueError(f"No PDF files found in {DATA_RAW}")
 
     for pdf_path in pdf_files:
         filename = pdf_path.name
         meta = CORPUS_META.get(filename)
         if meta is None:
-            print(f"  Skipping {filename} — not in CORPUS_META")
-            continue
-
+            raise ValueError(
+                f"{filename} found in data/raw/ but not in CORPUS_META — "
+                f"add it to CORPUS_META or remove the file from data/raw/"
+            )
         year = int(filename.split("_")[0])
         print(f"Ingesting {filename} ({meta['work']}, {year})...")
 
