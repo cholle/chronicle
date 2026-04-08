@@ -7,3 +7,4 @@ data/processed/
 *.egg-info/
 dist/
 .ruff_cache/
+.DS_Store
