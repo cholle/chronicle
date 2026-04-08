@@ -43,6 +43,20 @@ What makes this the thesis vindication: the query asks about the *labor process*
 
 The full demo runs three queries (early, mature, and late) and prints the generated answers with their source citations.
 
+## Live demo
+   
+The API is deployed at https://chronicle-production-7df6.up.railway.app.
+
+Try it:
+
+```bash
+curl -X POST https://chronicle-production-7df6.up.railway.app/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is alienated labor?", "period": "early"}'
+```
+
+Or use the Swagger UI: https://chronicle-production-7df6.up.railway.app/docs
+   
 ## Quick start
 
 ```bash
