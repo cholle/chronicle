@@ -236,12 +236,13 @@ def _upsert_chunks(
     year: int,
 ) -> None:
     index = pc.Index(index_name)
+    total_batches = -(-len(chunks) // EMBED_BATCH_SIZE)  # ceiling division
 
-    for batch_start in range(0, len(chunks), EMBED_BATCH_SIZE):
+    for batch_num, batch_start in enumerate(range(0, len(chunks), EMBED_BATCH_SIZE), start=1):
         batch = chunks[batch_start : batch_start + EMBED_BATCH_SIZE]
+        print(f"  Batch {batch_num}/{total_batches} ({len(batch)} chunks)...")
         embeddings = _embed_batch_with_retry(pc, batch)
-        if batch_start + EMBED_BATCH_SIZE < len(chunks):
-            time.sleep(10)  # stay under 250k tokens/min on Pinecone starter
+        time.sleep(2)  # baseline pacer: stay under 250k tokens/min on starter
 
         vectors = [
             {
