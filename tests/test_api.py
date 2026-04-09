@@ -73,6 +73,42 @@ def test_post_query_rejects_empty_query():
     assert response.status_code == 422
 
 
+def test_post_query_succeeds_without_api_key_configured():
+    """Auth is opt-in: when chronicle_api_key is None, requests pass through."""
+    with patch("chronicle.api.settings") as mock_settings, \
+         patch("chronicle.api.answer", return_value=_MOCK_RESULT):
+        mock_settings.chronicle_api_key = None
+        response = client.post("/query", json={"query": "test"})
+    assert response.status_code == 200
+
+
+def test_post_query_succeeds_with_matching_api_key(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", "test-secret")
+    with patch("chronicle.api.answer", return_value=_MOCK_RESULT):
+        response = client.post(
+            "/query",
+            json={"query": "test"},
+            headers={"X-API-Key": "test-secret"},
+        )
+    assert response.status_code == 200
+
+
+def test_post_query_returns_401_without_api_key_header(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", "test-secret")
+    response = client.post("/query", json={"query": "test"})
+    assert response.status_code == 401
+
+
+def test_post_query_returns_401_with_wrong_api_key(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", "test-secret")
+    response = client.post(
+        "/query",
+        json={"query": "test"},
+        headers={"X-API-Key": "wrong-key"},
+    )
+    assert response.status_code == 401
+
+
 def test_post_query_rejects_top_k_out_of_range():
     response = client.post("/query", json={"query": "test", "top_k": 0})
     assert response.status_code == 422

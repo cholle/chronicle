@@ -23,7 +23,7 @@ Four modules with strict single responsibility. Data flows left to right:
 ingest.py → (Pinecone) → retrieve.py → generate.py → api.py (stub)
 ```
 
-**`config.py`** — Pydantic Settings singleton. All other modules import `settings` from here. No `os.getenv` elsewhere. Required env vars: `ANTHROPIC_API_KEY`, `PINECONE_API_KEY`. Defaults: `pinecone_index="chronicle"`, `embedding_model="multilingual-e5-large"`, `claude_model="claude-sonnet-4-6"`.
+**`config.py`** — Pydantic Settings singleton. All other modules import `settings` from here. No `os.getenv` elsewhere. Required env vars: `ANTHROPIC_API_KEY`, `PINECONE_API_KEY`. Optional: `CHRONICLE_API_KEY` (when set, POST /query requires a matching `X-API-Key` header; when unset, no auth is enforced). Defaults: `pinecone_index="chronicle"`, `embedding_model="multilingual-e5-large"`, `claude_model="claude-sonnet-4-6"`.
 
 **`ingest.py`** — PDF extraction → 3-rule text cleanup (page-number strip, line-rejoining, whitespace collapse) → paragraph-merged chunking (400-tok target, 450-tok ceiling, 50-tok overlap via tiktoken) → Pinecone upsert. Chunk IDs are `{filename_stem}_{chunk_index}` — deterministic, so re-ingestion is idempotent. Embedding uses Pinecone inference API with `input_type="passage"`.
 
@@ -53,3 +53,4 @@ Index name `chronicle`, 1024 dimensions, cosine similarity, serverless. Must use
 - Do not introduce `Index` as a type import from `pinecone` — the top-level symbol doesn't exist in v5+. Use `Any` or omit the annotation.
 - Do not couple retrieve.py or generate.py to FastAPI. api.py is a thin layer; the lower modules must remain usable from CLI scripts.
 - Do not add DocStore / BaseRetriever / ChunkingStrategy abstractions preemptively. Write concrete versions first; extract interfaces only when a second concrete implementation exists.
+- Do not remove the `_require_api_key` dependency from the /query route — it is the only protection against unauthenticated Anthropic token burn on the public Railway deployment.

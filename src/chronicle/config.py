@@ -16,5 +16,9 @@ class Settings(BaseSettings):
     embedding_model: str = "multilingual-e5-large"
     claude_model: str = "claude-sonnet-4-6"
 
+    # When set, POST /query requires a matching X-API-Key header.
+    # When None (default), no auth is enforced — useful for local development.
+    chronicle_api_key: str | None = None
+
 
 settings = Settings()
