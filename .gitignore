@@ -8,3 +8,8 @@ data/processed/
 dist/
 .ruff_cache/
 .DS_Store
+
+# mempalace artifacts
+entities.json
+mempalace.yaml
+src/chronicle/prompts.md
