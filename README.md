@@ -44,19 +44,16 @@ What makes this the thesis vindication: the query asks about the *labor process*
 The full demo runs three queries (early, mature, and late) and prints the generated answers with their source citations.
 
 ## Live demo
-   
+
 The API is deployed at https://chronicle-production-7df6.up.railway.app.
 
-Try it:
+`GET /` and `GET /health` are public — try them in a browser to verify the service is up. Swagger UI is at `/docs`.
 
-```bash
-curl -X POST https://chronicle-production-7df6.up.railway.app/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is alienated labor?", "period": "early"}'
-```
+`POST /query` requires an API key (`X-API-Key` header). This protects the endpoint from unauthenticated LLM token burn.
 
-Or use the Swagger UI: https://chronicle-production-7df6.up.railway.app/docs
-   
+For a demo key to test live queries, contact me via [LinkedIn](https://www.linkedin.com/in/chad-h-6038558) or open an issue on this repo.
+
+
 ## Quick start
 
 ```bash
