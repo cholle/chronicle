@@ -39,7 +39,8 @@ def test_health_returns_ok():
     assert response.json() == {"status": "ok"}
 
 
-def test_post_query_calls_answer_and_returns_shape():
+def test_post_query_calls_answer_and_returns_shape(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", None)
     with patch("chronicle.api.answer", return_value=_MOCK_RESULT) as mock_answer:
         response = client.post(
             "/query",
@@ -60,7 +61,8 @@ def test_post_query_calls_answer_and_returns_shape():
     )
 
 
-def test_post_query_returns_500_on_generate_exception():
+def test_post_query_returns_500_on_generate_exception(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", None)
     with patch("chronicle.api.answer", side_effect=RuntimeError("Pinecone unavailable")):
         response = client.post("/query", json={"query": "test"})
 
@@ -68,7 +70,8 @@ def test_post_query_returns_500_on_generate_exception():
     assert "Pinecone unavailable" in response.json()["detail"]
 
 
-def test_post_query_rejects_empty_query():
+def test_post_query_rejects_empty_query(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", None)
     response = client.post("/query", json={"query": ""})
     assert response.status_code == 422
 
@@ -109,7 +112,8 @@ def test_post_query_returns_401_with_wrong_api_key(monkeypatch):
     assert response.status_code == 401
 
 
-def test_post_query_rejects_top_k_out_of_range():
+def test_post_query_rejects_top_k_out_of_range(monkeypatch):
+    monkeypatch.setattr("chronicle.api.settings.chronicle_api_key", None)
     response = client.post("/query", json={"query": "test", "top_k": 0})
     assert response.status_code == 422
 

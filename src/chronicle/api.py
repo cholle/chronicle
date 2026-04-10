@@ -5,7 +5,8 @@ from __future__ import annotations
 import secrets
 from typing import Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 
 from chronicle.config import settings
@@ -23,11 +24,14 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 
 
-def _require_api_key(x_api_key: str | None = Header(None)) -> None:
+_api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def _require_api_key(api_key: str | None = Security(_api_key_scheme)) -> None:
     if settings.chronicle_api_key is None:
         return
-    if x_api_key is None or not secrets.compare_digest(
-        x_api_key, settings.chronicle_api_key
+    if api_key is None or not secrets.compare_digest(
+        api_key, settings.chronicle_api_key
     ):
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
